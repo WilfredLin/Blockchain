@@ -1,0 +1,56 @@
+import hashlib
+
+class Block:
+    def __init__(self, index, previous_hash, timestamp, data, hash):
+        self.index = index
+        self.previous_hash = previous_hash
+        self.timestamp = timestamp
+        self.data = data
+        self.hash = hash
+
+    @staticmethod
+    def calculate_hash(index, previous_hash, timestamp, data):
+        value = str(index) + str(previous_hash) + str(timestamp) + str(data)
+        return hashlib.sha256(value.encode()).hexdigest()
+
+class Blockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_block(index=0, previous_hash='0')
+
+    def create_block(self, index, previous_hash, data=''): 
+        timestamp = self.get_timestamp()
+        hash = Block.calculate_hash(index, previous_hash, timestamp, data)
+        block = Block(index, previous_hash, timestamp, data, hash)
+        self.chain.append(block)
+        return block
+
+    def get_timestamp(self):
+        import time
+        return int(time.time())
+
+    def get_last_block(self):
+        return self.chain[-1] if self.chain else None
+
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+
+            if current_block.hash != Block.calculate_hash(current_block.index, previous_block.hash, current_block.timestamp, current_block.data):
+                return False
+            if current_block.previous_hash != previous_block.hash:
+                return False
+        return True
+
+# Example usage:
+blockchain = Blockchain()
+blockchain.create_block(index=1, previous_hash=blockchain.get_last_block().hash, data='First block data')
+blockchain.create_block(index=2, previous_hash=blockchain.get_last_block().hash, data='Second block data')
+
+# Check if the blockchain is valid
+print('Is blockchain valid?', blockchain.is_chain_valid())
+
+# Display the blockchain
+for block in blockchain.chain:
+    print(f'Index: {block.index}, Hash: {block.hash}, Previous Hash: {block.previous_hash}, Data: {block.data}')
